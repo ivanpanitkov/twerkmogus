@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ТГ Кликер</title>
+    <title>TG Кликер с картинками</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * {
@@ -14,225 +14,434 @@
         
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: var(--tg-theme-bg-color, #ffffff);
-            color: var(--tg-theme-text-color, #000000);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             padding: 20px;
+            color: white;
         }
         
         .container {
             text-align: center;
             max-width: 400px;
             width: 100%;
-        }
-        
-        .counter {
-            font-size: 64px;
-            font-weight: bold;
-            margin: 20px 0;
-            color: var(--tg-theme-button-color, #2481cc);
-        }
-        
-        .click-circle {
-            width: 200px;
-            height: 200px;
-            background: var(--tg-theme-button-color, #2481cc);
-            border-radius: 50%;
-            margin: 30px auto;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 48px;
-            font-weight: bold;
-            cursor: pointer;
-            user-select: none;
-            transition: transform 0.1s;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-        }
-        
-        .click-circle:active {
-            transform: scale(0.95);
-        }
-        
-        .button {
-            background: var(--tg-theme-button-color, #2481cc);
-            color: var(--tg-theme-button-text-color, #ffffff);
-            border: none;
-            padding: 15px 30px;
-            border-radius: 25px;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            margin: 10px;
-            width: 100%;
-            transition: opacity 0.3s;
-        }
-        
-        .button:hover {
-            opacity: 0.9;
-        }
-        
-        .button.secondary {
-            background: var(--tg-theme-secondary-bg-color, #f0f0f0);
-            color: var(--tg-theme-text-color, #000000);
-        }
-        
-        .user-info {
-            background: var(--tg-theme-secondary-bg-color, #f0f0f0);
-            padding: 15px;
-            border-radius: 15px;
-            margin-bottom: 20px;
-            text-align: left;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
         }
         
         h1 {
+            font-size: 28px;
             margin-bottom: 20px;
-            color: var(--tg-theme-text-color, #000000);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
         
-        .buttons-row {
+        .counter-container {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .counter {
+            font-size: 72px;
+            font-weight: bold;
+            color: #FFD700;
+            text-shadow: 3px 3px 0 #B8860B;
+        }
+        
+        .counter-label {
+            font-size: 18px;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+        
+        .image-container {
+            margin: 30px 0;
+            perspective: 1000px;
+        }
+        
+        .click-image {
+            width: 250px;
+            height: 250px;
+            margin: 0 auto;
+            cursor: pointer;
+            transition: transform 0.3s;
+            animation: float 3s ease-in-out infinite;
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.3));
+        }
+        
+        .click-image:active {
+            transform: scale(0.9) rotate(10deg);
+            animation: none;
+        }
+        
+        .buttons {
             display: flex;
             gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
             margin-top: 20px;
+        }
+        
+        .button {
+            background: linear-gradient(45deg, #FF416C, #FF4B2B);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            flex: 1;
+            min-width: 120px;
+            box-shadow: 0 5px 15px rgba(255, 65, 108, 0.4);
+        }
+        
+        .button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(255, 65, 108, 0.6);
+        }
+        
+        .button:active {
+            transform: translateY(1px);
+        }
+        
+        .button.secondary {
+            background: linear-gradient(45deg, #36D1DC, #5B86E5);
+            box-shadow: 0 5px 15px rgba(91, 134, 229, 0.4);
+        }
+        
+        .stats {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            text-align: left;
+        }
+        
+        .theme-selector {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .theme-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 3px solid white;
+            cursor: pointer;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        @keyframes coinSpin {
+            0% { transform: rotateY(0deg); }
+            100% { transform: rotateY(360deg); }
+        }
+        
+        .spin {
+            animation: coinSpin 0.5s ease-out;
+        }
+        
+        .pulse {
+            animation: pulse 0.5s;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🎮 Telegram Кликер</h1>
+        <h1>🎮 Telegram Кликер с картинками</h1>
         
-        <div class="user-info" id="userInfo">
-            Загрузка данных...
+        <div class="counter-container">
+            <div class="counter-label">ТВОИ ОЧКИ:</div>
+            <div class="counter" id="counter">0</div>
         </div>
         
-        <div class="counter" id="counter">0</div>
-        
-        <div class="click-circle" id="clickCircle">
-            КЛИК!
+        <div class="image-container">
+            <!-- Основная кликабельная картинка -->
+            <img src="https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/coin1.png" 
+                 alt="Кликни меня!" 
+                 class="click-image" 
+                 id="clickImage">
         </div>
         
-        <div class="buttons-row">
-            <button class="button secondary" id="resetBtn">Сбросить</button>
-            <button class="button" id="multiplyBtn">×2</button>
+        <div class="buttons">
+            <button class="button" id="clickBtn">🔥 КЛИКНИ!</button>
+            <button class="button secondary" id="multiplyBtn">🎯 ×2</button>
+            <button class="button secondary" id="resetBtn">🔄 СБРОС</button>
         </div>
         
-        <button class="button" id="saveBtn">💾 Сохранить</button>
-        <button class="button secondary" id="closeBtn">✖ Закрыть</button>
+        <div class="theme-selector">
+            <div class="theme-btn" style="background: linear-gradient(135deg, #667eea, #764ba2);" onclick="changeTheme('default')"></div>
+            <div class="theme-btn" style="background: linear-gradient(135deg, #f093fb, #f5576c);" onclick="changeTheme('pink')"></div>
+            <div class="theme-btn" style="background: linear-gradient(135deg, #4facfe, #00f2fe);" onclick="changeTheme('blue')"></div>
+            <div class="theme-btn" style="background: linear-gradient(135deg, #43e97b, #38f9d7);" onclick="changeTheme('green')"></div>
+        </div>
+        
+        <div class="stats">
+            <div>👤 Игрок: <span id="userName">Гость</span></div>
+            <div>🏆 Рекорд: <span id="highScore">0</span></div>
+            <div>⚡ Кликов/сек: <span id="cps">0</span></div>
+        </div>
+        
+        <div style="margin-top: 20px; font-size: 14px; opacity: 0.7;">
+            💡 Удерживайте кнопку для авто-кликов!
+        </div>
     </div>
 
     <script>
         // Инициализация Telegram Web App
         const tg = window.Telegram.WebApp;
-        
-        // Расширяем на весь экран
         tg.expand();
         
-        // Получаем данные пользователя
+        // Данные пользователя
         const user = tg.initDataUnsafe?.user;
         let clickCount = 0;
+        let highScore = localStorage.getItem('highScore') || 0;
+        let lastClickTime = Date.now();
+        let clicksPerSecond = 0;
+        let clickTimes = [];
+        let autoClickInterval = null;
+        let isAutoClicking = false;
         
-        // Элементы DOM
+        // Массив картинок (ЗАМЕНИТЕ НА СВОИ ССЫЛКИ!)
+        const images = [
+            'https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/coin1.png',
+            'https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/coin2.png',
+            'https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/coin3.png',
+            'https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/coin4.png'
+        ];
+        
+        // Текущая картинка
+        let currentImageIndex = 0;
+        
+        // DOM элементы
         const counterEl = document.getElementById('counter');
-        const clickCircle = document.getElementById('clickCircle');
-        const resetBtn = document.getElementById('resetBtn');
+        const clickImage = document.getElementById('clickImage');
+        const clickBtn = document.getElementById('clickBtn');
         const multiplyBtn = document.getElementById('multiplyBtn');
-        const saveBtn = document.getElementById('saveBtn');
-        const closeBtn = document.getElementById('closeBtn');
-        const userInfoEl = document.getElementById('userInfo');
+        const resetBtn = document.getElementById('resetBtn');
+        const userNameEl = document.getElementById('userName');
+        const highScoreEl = document.getElementById('highScore');
+        const cpsEl = document.getElementById('cps');
         
-        // Показываем информацию о пользователе
-        if (user) {
-            userInfoEl.innerHTML = `
-                👤 <b>${user.first_name || 'Пользователь'}</b>
-                ${user.last_name ? user.last_name : ''}
-                ${user.username ? `<br>@${user.username}` : ''}
-            `;
-        } else {
-            userInfoEl.innerHTML = '👤 Гость';
+        // Инициализация
+        function init() {
+            // Показываем имя пользователя
+            if (user) {
+                userNameEl.textContent = user.first_name || 'Аноним';
+            }
+            
+            // Устанавливаем рекорд
+            highScoreEl.textContent = highScore;
+            
+            // Обновляем интерфейс
+            updateCounter();
+            
+            // Загружаем сохраненный счет
+            const savedCount = localStorage.getItem('clickCount');
+            if (savedCount) {
+                clickCount = parseInt(savedCount);
+                updateCounter();
+            }
         }
         
-        // Обновляем счетчик
+        // Обновление счетчика
         function updateCounter() {
             counterEl.textContent = clickCount;
             
-            // Меняем цвет круга в зависимости от счета
-            const circle = document.getElementById('clickCircle');
-            const hue = (clickCount * 10) % 360;
-            circle.style.background = `hsl(${hue}, 70%, 60%)`;
+            // Обновляем рекорд
+            if (clickCount > highScore) {
+                highScore = clickCount;
+                highScoreEl.textContent = highScore;
+                localStorage.setItem('highScore', highScore);
+            }
+            
+            // Сохраняем текущий счет
+            localStorage.setItem('clickCount', clickCount);
+            
+            // Меняем картинку в зависимости от счета
+            const imageIndex = Math.min(Math.floor(clickCount / 10), images.length - 1);
+            if (imageIndex !== currentImageIndex) {
+                currentImageIndex = imageIndex;
+                clickImage.src = images[currentImageIndex];
+                clickImage.classList.add('spin');
+                setTimeout(() => clickImage.classList.remove('spin'), 500);
+            }
+            
+            // Анимация при больших числах
+            if (clickCount % 10 === 0 && clickCount > 0) {
+                counterEl.classList.add('pulse');
+                setTimeout(() => counterEl.classList.remove('pulse'), 500);
+            }
         }
         
-        // Обработчик клика по кругу
-        clickCircle.addEventListener('click', () => {
+        // Обработчик клика по картинке
+        clickImage.addEventListener('click', handleClick);
+        
+        // Обработчик клика по кнопке
+        clickBtn.addEventListener('click', handleClick);
+        
+        // Авто-клик при удерживании
+        clickBtn.addEventListener('mousedown', startAutoClick);
+        clickBtn.addEventListener('touchstart', startAutoClick);
+        
+        clickBtn.addEventListener('mouseup', stopAutoClick);
+        clickBtn.addEventListener('touchend', stopAutoClick);
+        clickBtn.addEventListener('mouseleave', stopAutoClick);
+        
+        function handleClick() {
+            // Добавляем клик
             clickCount++;
+            
+            // Записываем время клика для расчета CPS
+            const now = Date.now();
+            clickTimes.push(now);
+            clickTimes = clickTimes.filter(time => now - time < 1000);
+            clicksPerSecond = clickTimes.length;
+            cpsEl.textContent = clicksPerSecond;
+            
+            // Обновляем интерфейс
             updateCounter();
             
-            // Анимация
-            clickCircle.style.transform = 'scale(0.95)';
+            // Анимация картинки
+            clickImage.style.transform = 'scale(0.9) rotate(10deg)';
             setTimeout(() => {
-                clickCircle.style.transform = 'scale(1)';
+                clickImage.style.transform = 'scale(1) rotate(0deg)';
             }, 100);
-        });
-        
-        // Сброс
-        resetBtn.addEventListener('click', () => {
-            clickCount = 0;
-            updateCounter();
-        });
+            
+            // Эффект частиц
+            createParticle();
+        }
         
         // Умножение
         multiplyBtn.addEventListener('click', () => {
             if (clickCount > 0) {
                 clickCount *= 2;
                 updateCounter();
+                tg.HapticFeedback.impactOccurred('heavy');
             }
         });
         
-        // Сохранение данных
-        saveBtn.addEventListener('click', () => {
+        // Сброс
+        resetBtn.addEventListener('click', () => {
+            if (confirm('Точно сбросить счет?')) {
+                clickCount = 0;
+                updateCounter();
+                tg.HapticFeedback.impactOccurred('medium');
+            }
+        });
+        
+        // Авто-кликер
+        function startAutoClick() {
+            if (isAutoClicking) return;
+            isAutoClicking = true;
+            autoClickInterval = setInterval(handleClick, 100);
+        }
+        
+        function stopAutoClick() {
+            isAutoClicking = false;
+            if (autoClickInterval) {
+                clearInterval(autoClickInterval);
+                autoClickInterval = null;
+            }
+        }
+        
+        // Смена темы
+        function changeTheme(theme) {
+            const themes = {
+                default: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                pink: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                blue: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+                green: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)'
+            };
+            document.body.style.background = themes[theme] || themes.default;
+            tg.HapticFeedback.impactOccurred('light');
+        }
+        
+        // Эффект частиц
+        function createParticle() {
+            const particle = document.createElement('div');
+            particle.style.cssText = `
+                position: fixed;
+                width: 10px;
+                height: 10px;
+                background: #FFD700;
+                border-radius: 50%;
+                pointer-events: none;
+                z-index: 1000;
+                left: ${clickImage.offsetLeft + clickImage.offsetWidth/2}px;
+                top: ${clickImage.offsetTop + clickImage.offsetHeight/2}px;
+            `;
+            document.body.appendChild(particle);
+            
+            const angle = Math.random() * Math.PI * 2;
+            const speed = 2 + Math.random() * 3;
+            const velocity = {
+                x: Math.cos(angle) * speed,
+                y: Math.sin(angle) * speed
+            };
+            
+            let opacity = 1;
+            function animate() {
+                particle.style.left = parseFloat(particle.style.left) + velocity.x + 'px';
+                particle.style.top = parseFloat(particle.style.top) + velocity.y + 'px';
+                particle.style.opacity = opacity;
+                opacity -= 0.03;
+                velocity.y += 0.1; // гравитация
+                
+                if (opacity > 0) {
+                    requestAnimationFrame(animate);
+                } else {
+                    particle.remove();
+                }
+            }
+            animate();
+        }
+        
+        // Сохранение в Telegram
+        tg.MainButton.setText(`💾 Сохранить (${clickCount})`);
+        tg.MainButton.show();
+        tg.MainButton.onClick(() => {
             const data = {
                 action: 'save_score',
                 score: clickCount,
                 user_id: user?.id
             };
-            
-            // Отправляем данные боту
-            tg.sendData(JSON.stringify(data));
-            
-            tg.showPopup({
-                title: 'Сохранено!',
-                message: `Ваш счет: ${clickCount}`,
-                buttons: [{ type: 'ok' }]
-            });
-        });
-        
-        // Закрытие
-        closeBtn.addEventListener('click', () => {
-            tg.close();
-        });
-        
-        // Инициализация
-        updateCounter();
-        
-        // Показываем Main Button внизу
-        tg.MainButton.setText(`Счет: ${clickCount}`);
-        tg.MainButton.onClick(() => {
-            const data = {
-                action: 'save_via_button',
-                score: clickCount
-            };
             tg.sendData(JSON.stringify(data));
             tg.close();
         });
         
-        // Обновляем текст кнопки при изменении счета
+        // Обновление текста кнопки
         setInterval(() => {
-            tg.MainButton.setText(`Счет: ${clickCount}`);
+            tg.MainButton.setText(`💾 Сохранить (${clickCount})`);
         }, 1000);
+        
+        // Запуск
+        init();
+        
+        // Анимация плавающего эффекта
+        setInterval(() => {
+            clickImage.style.animation = 'float 3s ease-in-out infinite';
+        }, 100);
     </script>
 </body>
 </html>
