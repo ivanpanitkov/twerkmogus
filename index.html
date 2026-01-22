@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ТГ Кликер</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+        }
+        
+        .counter {
+            font-size: 64px;
+            font-weight: bold;
+            margin: 20px 0;
+            color: var(--tg-theme-button-color, #2481cc);
+        }
+        
+        .click-circle {
+            width: 200px;
+            height: 200px;
+            background: var(--tg-theme-button-color, #2481cc);
+            border-radius: 50%;
+            margin: 30px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 48px;
+            font-weight: bold;
+            cursor: pointer;
+            user-select: none;
+            transition: transform 0.1s;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        
+        .click-circle:active {
+            transform: scale(0.95);
+        }
+        
+        .button {
+            background: var(--tg-theme-button-color, #2481cc);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 10px;
+            width: 100%;
+            transition: opacity 0.3s;
+        }
+        
+        .button:hover {
+            opacity: 0.9;
+        }
+        
+        .button.secondary {
+            background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            color: var(--tg-theme-text-color, #000000);
+        }
+        
+        .user-info {
+            background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        
+        h1 {
+            margin-bottom: 20px;
+            color: var(--tg-theme-text-color, #000000);
+        }
+        
+        .buttons-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 Telegram Кликер</h1>
+        
+        <div class="user-info" id="userInfo">
+            Загрузка данных...
+        </div>
+        
+        <div class="counter" id="counter">0</div>
+        
+        <div class="click-circle" id="clickCircle">
+            КЛИК!
+        </div>
+        
+        <div class="buttons-row">
+            <button class="button secondary" id="resetBtn">Сбросить</button>
+            <button class="button" id="multiplyBtn">×2</button>
+        </div>
+        
+        <button class="button" id="saveBtn">💾 Сохранить</button>
+        <button class="button secondary" id="closeBtn">✖ Закрыть</button>
+    </div>
+
+    <script>
+        // Инициализация Telegram Web App
+        const tg = window.Telegram.WebApp;
+        
+        // Расширяем на весь экран
+        tg.expand();
+        
+        // Получаем данные пользователя
+        const user = tg.initDataUnsafe?.user;
+        let clickCount = 0;
+        
+        // Элементы DOM
+        const counterEl = document.getElementById('counter');
+        const clickCircle = document.getElementById('clickCircle');
+        const resetBtn = document.getElementById('resetBtn');
+        const multiplyBtn = document.getElementById('multiplyBtn');
+        const saveBtn = document.getElementById('saveBtn');
+        const closeBtn = document.getElementById('closeBtn');
+        const userInfoEl = document.getElementById('userInfo');
+        
+        // Показываем информацию о пользователе
+        if (user) {
+            userInfoEl.innerHTML = `
+                👤 <b>${user.first_name || 'Пользователь'}</b>
+                ${user.last_name ? user.last_name : ''}
+                ${user.username ? `<br>@${user.username}` : ''}
+            `;
+        } else {
+            userInfoEl.innerHTML = '👤 Гость';
+        }
+        
+        // Обновляем счетчик
+        function updateCounter() {
+            counterEl.textContent = clickCount;
+            
+            // Меняем цвет круга в зависимости от счета
+            const circle = document.getElementById('clickCircle');
+            const hue = (clickCount * 10) % 360;
+            circle.style.background = `hsl(${hue}, 70%, 60%)`;
+        }
+        
+        // Обработчик клика по кругу
+        clickCircle.addEventListener('click', () => {
+            clickCount++;
+            updateCounter();
+            
+            // Анимация
+            clickCircle.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                clickCircle.style.transform = 'scale(1)';
+            }, 100);
+        });
+        
+        // Сброс
+        resetBtn.addEventListener('click', () => {
+            clickCount = 0;
+            updateCounter();
+        });
+        
+        // Умножение
+        multiplyBtn.addEventListener('click', () => {
+            if (clickCount > 0) {
+                clickCount *= 2;
+                updateCounter();
+            }
+        });
+        
+        // Сохранение данных
+        saveBtn.addEventListener('click', () => {
+            const data = {
+                action: 'save_score',
+                score: clickCount,
+                user_id: user?.id
+            };
+            
+            // Отправляем данные боту
+            tg.sendData(JSON.stringify(data));
+            
+            tg.showPopup({
+                title: 'Сохранено!',
+                message: `Ваш счет: ${clickCount}`,
+                buttons: [{ type: 'ok' }]
+            });
+        });
+        
+        // Закрытие
+        closeBtn.addEventListener('click', () => {
+            tg.close();
+        });
+        
+        // Инициализация
+        updateCounter();
+        
+        // Показываем Main Button внизу
+        tg.MainButton.setText(`Счет: ${clickCount}`);
+        tg.MainButton.onClick(() => {
+            const data = {
+                action: 'save_via_button',
+                score: clickCount
+            };
+            tg.sendData(JSON.stringify(data));
+            tg.close();
+        });
+        
+        // Обновляем текст кнопки при изменении счета
+        setInterval(() => {
+            tg.MainButton.setText(`Счет: ${clickCount}`);
+        }, 1000);
+    </script>
+</body>
+</html>
