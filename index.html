@@ -200,6 +200,33 @@
     const highScoreEl = document.getElementById('highScore');
     const popupOverlay = document.getElementById('popupOverlay');
 
+
+    // Функция для отправки клика на сервер
+    async function sendClickToServer(clickData) {
+        try {
+            // Показываем индикатор
+            syncIndicator.classList.add('active');
+            
+            const data = {
+                action: 'click',
+                click_count: clickData.clickCount,
+                timestamp: new Date().toISOString()
+            };
+
+            // Отправляем данные на сервер через Web App
+            tg.sendData(JSON.stringify(data));
+            
+            // Скрываем индикатор через 500ms
+            setTimeout(() => {
+                syncIndicator.classList.remove('active');
+            }, 500);
+            
+        } catch (error) {
+            console.error('Ошибка отправки клика:', error);
+            syncIndicator.classList.remove('active');
+        }
+    }
+    
     function init() {
         if (user) {
             userNameEl.textContent = user.first_name || 'Аноним';
@@ -302,6 +329,12 @@
         if (clickCount % 100 === 0 && clickCount > 0) {
             showPopup();
         }
+
+        sendClickToServer({
+                clickCount: 1,
+                fingerCount: 0,
+                isMultitouch: false
+            });
     }
 
     // ОБРАБОТЧИК С МУЛЬТИТАЧЕМ
