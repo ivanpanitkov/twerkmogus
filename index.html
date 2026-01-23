@@ -74,7 +74,6 @@
         transition: transform 0.1s;
         display: block;
         margin: 0 auto;
-        border-radius: 20px;
         background: rgba(255, 255, 255, 0.1);
     }
 
@@ -133,11 +132,11 @@
     }
 
     .popup-image {
-        width: 150px;
-        height: 150px;
+        width: 250px;
+        height: 250px;
         opacity: 0;
         transform: scale(0.3);
-        transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        transition: all 0.9s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         filter: drop-shadow(0 0 20px rgba(255, 255, 0, 0.8));
     }
 
@@ -148,7 +147,7 @@
 
     .popup-image.hide {
         opacity: 0;
-        transform: scale(1.5) rotate(15deg);
+        transform: scale(1.5);
     }
 </style>
 
@@ -221,31 +220,26 @@
         const popupImg = document.createElement('img');
         popupImg.src = popupImageUrl;
         popupImg.className = 'popup-image';
-        
+
         // Добавляем в overlay
         popupOverlay.innerHTML = '';
         popupOverlay.appendChild(popupImg);
-        
+
         // Запускаем анимацию появления
         requestAnimationFrame(() => {
             popupImg.classList.add('show');
-            
+
             // Через 400ms начинаем исчезать
             setTimeout(() => {
                 popupImg.classList.remove('show');
                 popupImg.classList.add('hide');
-                
+
                 // Удаляем через 600ms
                 setTimeout(() => {
                     popupOverlay.innerHTML = '';
                 }, 600);
             }, 400);
         });
-
-        // Сильная вибрация для 100 кликов
-        if (tg.HapticFeedback) {
-            tg.HapticFeedback.impactOccurred('heavy');
-        }
     }
 
     function updateCounter() {
