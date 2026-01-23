@@ -62,7 +62,7 @@
     }
 
     .image-container {
-        margin: 0 0 30px 0;
+        margin: 50px 0 25px 0;
     }
 
     .click-image {
@@ -152,18 +152,19 @@
 </style>
 
 <div class="container no-select">
-    <div class="counter" id="counter">0</div>
-
-    <div class="image-container">
-        <img src="https://ivanpanitkov.github.io/twerkmogus/Data/images/button1-0.png" class="click-image"
-            id="clickImage" alt="Кликни!">
-    </div>
-
-    <button class="button" id="resetBtn">🔄 Сбросить</button>
 
     <div class="stats">
         <div>👤 Игрок: <span id="userName">Гость</span></div>
         <div>🏆 Рекорд: <span id="highScore">0</span></div>
+    </div>
+
+    <div class="counter" id="counter">0</div>
+
+    <button class="button" id="resetBtn">🔄 Сбросить</button>
+
+    <div class="image-container">
+        <img src="https://ivanpanitkov.github.io/twerkmogus/Data/images/button1-0.png" class="click-image"
+            id="clickImage" alt="Кликни!">
     </div>
 </div>
 
@@ -248,7 +249,7 @@
         bonusEl.textContent = `👆×${fingerCount}!`;
         bonusEl.style.cssText = `
             position: fixed;
-            top: 50%;
+            top: 40%;
             left: 50%;
             transform: translate(-50%, -50%);
             font-size: 40px;
@@ -259,7 +260,7 @@
             pointer-events: none;
             animation: pop 0.5s ease-out forwards;
         `;
-        
+
         // Добавляем стиль анимации
         const style = document.createElement('style');
         style.textContent = `
@@ -270,7 +271,7 @@
             }
         `;
         document.head.appendChild(style);
-        
+
         document.body.appendChild(bonusEl);
         setTimeout(() => {
             bonusEl.remove();
@@ -304,31 +305,31 @@
     }
 
     // ОБРАБОТЧИК С МУЛЬТИТАЧЕМ
-    clickImage.addEventListener('touchstart', function(e) {
+    clickImage.addEventListener('touchstart', function (e) {
         // Базовый клик + изменение картинки
         clickCount++;
         currentImageIndex = (currentImageIndex + 1) % images.length;
         clickImage.src = images[currentImageIndex];
-        
+
         // Если мультитач (больше одного пальца)
         if (e.touches.length > 1) {
             // Добавляем очки за каждый дополнительный палец
             const extraFingers = e.touches.length - 1;
-            clickCount += extraFingers * 5; // +5 очков за каждый дополнительный палец
-            
+            clickCount += extraFingers; // +1 очко за каждый дополнительный палец
+
             // Меняем картинку дополнительно за каждый палец
             for (let i = 0; i < extraFingers; i++) {
                 currentImageIndex = (currentImageIndex + 1) % images.length;
                 clickImage.src = images[currentImageIndex];
             }
-            
+
             // Эффект мультитача
-            this.style.transform = `scale(0.9) rotate(${extraFingers * 10}deg)`;
+            this.style.transform = `scale(0.9)`;
             this.style.filter = `brightness(${1 + extraFingers * 0.2})`;
-            
+
             // Показываем бонус
             showFingerBonus(extraFingers + 1);
-            
+
             // Сильная вибрация
             if (tg.HapticFeedback) {
                 tg.HapticFeedback.impactOccurred('heavy');
@@ -340,7 +341,7 @@
                 tg.HapticFeedback.impactOccurred('light');
             }
         }
-        
+
         // Обновляем счет и возвращаем трансформацию
         updateCounter();
         setTimeout(() => {
@@ -350,20 +351,20 @@
     });
 
     // Также обработчик для обычных кликов (мышь)
-    clickImage.addEventListener('click', function(e) {
+    clickImage.addEventListener('click', function (e) {
         // Если это не тач-событие (мышь или одиночный клик на телефоне)
         if (!e.touches) {
             clickCount++;
             currentImageIndex = (currentImageIndex + 1) % images.length;
             clickImage.src = images[currentImageIndex];
-            
+
             this.style.transform = 'scale(0.95)';
             setTimeout(() => {
                 this.style.transform = 'scale(1)';
             }, 100);
-            
+
             updateCounter();
-            
+
             if (tg.HapticFeedback) {
                 tg.HapticFeedback.impactOccurred('light');
             }
