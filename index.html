@@ -1,235 +1,324 @@
 <!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TG Кликер</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            color: white;
-        }
-        
-        .container {
-            text-align: center;
-            max-width: 400px;
-            width: 100%;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-        }
-        
-        .counter {
-            font-size: 72px;
-            font-weight: bold;
-            color: #FFD700;
-            text-shadow: 3px 3px 0 #B8860B;
-            margin: 20px 0;
-        }
-        
-        .image-container {
-            margin: 30px 0;
-        }
-        
-        .click-image {
-            width: 300px;
-            height: 300px;
-            cursor: pointer;
-            transition: transform 0.1s;
-            image-rendering: crisp-edges;
-        }
-        
-        .click-image:active {
-            transform: scale(0.95);
-        }
-        
-        .button {
-            background: linear-gradient(45deg, #FF416C, #FF4B2B);
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 50px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            margin: 10px;
-            width: 100%;
-            transition: all 0.3s;
-        }
-        
-        .button:hover {
-            opacity: 0.9;
-            transform: translateY(-2px);
-        }
-        
-        .stats {
-            background: rgba(255, 255, 255, 0.15);
-            border-radius: 10px;
-            padding: 15px;
-            margin-top: 20px;
-            text-align: left;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>🎮 Among Us Кликер</h1>
-        
-        <div class="counter" id="counter">0</div>
-        
-        <div class="image-container">
-            <img src="https://ivanpanitkov.github.io/twerkmogus/Data/images/button1-0.png" 
-                 class="click-image" 
-                 id="clickImage"
-                 alt="Кликни!">
-        </div>
-        
-        <button class="button" id="resetBtn">🔄 Сбросить</button>
-        
-        <div class="stats">
-            <div>👤 Игрок: <span id="userName">Гость</span></div>
-            <div>🏆 Рекорд: <span id="highScore">0</span></div>
-        </div>
+<meta charset="UTF-8">
+<meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        touch-action: manipulation;
+        -webkit-user-select: none;
+        user-select: none;
+    }
+
+    html,
+    body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        -webkit-text-size-adjust: 100%;
+        font-family: -apple-system, BlinkMacgramBotAPI, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: white;
+        padding: 20px;
+    }
+
+    .container {
+        text-align: center;
+        width: 100%;
+        max-width: 400px;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 30px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        position: relative;
+        z-index: 1;
+    }
+
+    .counter {
+        font-size: 72px;
+        font-weight: bold;
+        color: #FFD700;
+        text-shadow: 3px 3px 0 #B8860B;
+        margin-bottom: 30px;
+        transition: transform 0.3s, color 0.3s, text-shadow 0.3s;
+    }
+
+    .counter.pulse {
+        transform: scale(1.2);
+        color: #ff9900;
+        text-shadow: 0 0 20px #ff9900;
+        transition: transform 0.3s, color 0.3s;
+    }
+
+    .image-container {
+        margin: 0 0 30px 0;
+    }
+
+    .click-image {
+        width: 60vw;
+        max-width: 280px;
+        height: auto;
+        aspect-ratio: 1/1;
+        cursor: pointer;
+        transition: transform 0.1s;
+        display: block;
+        margin: 0 auto;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    .click-image:active {
+        transform: scale(0.95);
+    }
+
+    .button {
+        background: linear-gradient(45deg, #FF416C, #FF4B2B);
+        color: white;
+        border: none;
+        padding: 18px;
+        border-radius: 50px;
+        font-size: 18px;
+        font-weight: bold;
+        cursor: pointer;
+        width: 100%;
+        transition: opacity 0.3s;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .button:active {
+        opacity: 0.8;
+    }
+
+    .stats {
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 10px;
+        padding: 15px;
+        margin-top: 20px;
+        text-align: left;
+        font-size: 14px;
+    }
+
+    .no-select {
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        -khtml-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+    }
+
+    /* Стили для всплывающей картинки */
+    .popup-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        pointer-events: none;
+    }
+
+    .popup-image {
+        width: 150px;
+        height: 150px;
+        opacity: 0;
+        transform: scale(0.3);
+        transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        filter: drop-shadow(0 0 20px rgba(255, 255, 0, 0.8));
+    }
+
+    .popup-image.show {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    .popup-image.hide {
+        opacity: 0;
+        transform: scale(1.5) rotate(15deg);
+    }
+</style>
+
+<div class="container no-select">
+    <div class="counter" id="counter">0</div>
+
+    <div class="image-container">
+        <img src="https://ivanpanitkov.github.io/twerkmogus/Data/images/button1-0.png" class="click-image"
+            id="clickImage" alt="Кликни!">
     </div>
 
-    <script>
-        // Инициализация Telegram Web App
-        const tg = window.Telegram.WebApp;
-        tg.expand();
-        
-        // Данные пользователя
-        const user = tg.initDataUnsafe?.user;
-        let clickCount = 0;
-        let highScore = localStorage.getItem('highScore') || 0;
-        
-        // ВАШИ КАРТИНКИ - будут меняться КАЖДЫЙ клик
-        const images = [
-            'https://ivanpanitkov.github.io/twerkmogus/Data/images/button1-0.png',
-            'https://ivanpanitkov.github.io/twerkmogus/Data/images/button1-1.png',
-            'https://ivanpanitkov.github.io/twerkmogus/Data/images/button1-2.png',
-            'https://ivanpanitkov.github.io/twerkmogus/Data/images/button1-3.png',
-            'https://ivanpanitkov.github.io/twerkmogus/Data/images/button1-4.png',
-            'https://ivanpanitkov.github.io/twerkmogus/Data/images/button1-5.png',
-            'https://ivanpanitkov.github.io/twerkmogus/Data/images/button1-6.png'
-        ];
-        
-        // Начинаем с первой картинки (button1-0.png)
-        let currentImageIndex = 0;
-        
-        // DOM элементы
-        const counterEl = document.getElementById('counter');
-        const clickImage = document.getElementById('clickImage');
-        const resetBtn = document.getElementById('resetBtn');
-        const userNameEl = document.getElementById('userName');
-        const highScoreEl = document.getElementById('highScore');
-        
-        // Инициализация
-        function init() {
-            // Показываем имя пользователя
-            if (user) {
-                userNameEl.textContent = user.first_name || 'Аноним';
-            }
-            
-            // Устанавливаем рекорд
-            highScoreEl.textContent = highScore;
-            
-            // Загружаем сохраненный счет
-            const savedCount = localStorage.getItem('clickCount');
-            if (savedCount) {
-                clickCount = parseInt(savedCount);
-                updateCounter();
-            }
-            
-            // Устанавливаем начальную картинку
-            clickImage.src = images[0];
+    <button class="button" id="resetBtn">🔄 Сбросить</button>
+
+    <div class="stats">
+        <div>👤 Игрок: <span id="userName">Гость</span></div>
+        <div>🏆 Рекорд: <span id="highScore">0</span></div>
+    </div>
+</div>
+
+<!-- Контейнер для всплывающих картинок -->
+<div class="popup-overlay" id="popupOverlay"></div>
+
+<script>
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+
+    const user = tg.initDataUnsafe?.user;
+    let clickCount = 0;
+    let highScore = localStorage.getItem('highScore') || 0;
+
+    const images = [
+        'https://ivanpanitkov.github.io/twerkmogus/Data/images/button1-0.png',
+        'https://ivanpanitkov.github.io/twerkmogus/Data/images/button1-1.png',
+        'https://ivanpanitkov.github.io/twerkmogus/Data/images/button1-2.png',
+        'https://ivanpanitkov.github.io/twerkmogus/Data/images/button1-3.png',
+        'https://ivanpanitkov.github.io/twerkmogus/Data/images/button1-4.png',
+        'https://ivanpanitkov.github.io/twerkmogus/Data/images/button1-5.png',
+        'https://ivanpanitkov.github.io/twerkmogus/Data/images/button1-6.png'
+    ];
+
+    const popupImageUrl = 'https://ivanpanitkov.github.io/twerkmogus/Data/images/popup1.png';
+
+    let currentImageIndex = 0;
+
+    const counterEl = document.getElementById('counter');
+    const clickImage = document.getElementById('clickImage');
+    const resetBtn = document.getElementById('resetBtn');
+    const userNameEl = document.getElementById('userName');
+    const highScoreEl = document.getElementById('highScore');
+    const popupOverlay = document.getElementById('popupOverlay');
+
+    function init() {
+        if (user) {
+            userNameEl.textContent = user.first_name || 'Аноним';
         }
-        
-        // Обновление счетчика и картинки
-        function updateCounter() {
-            counterEl.textContent = clickCount;
-            
-            // Обновляем рекорд
-            if (clickCount > highScore) {
-                highScore = clickCount;
-                highScoreEl.textContent = highScore;
-                localStorage.setItem('highScore', highScore);
-            }
-            
-            // Сохраняем текущий счет
-            localStorage.setItem('clickCount', clickCount);
-            
-            // Меняем картинку КАЖДЫЙ клик
-            currentImageIndex = (currentImageIndex + 1) % images.length;
-            clickImage.src = images[currentImageIndex];
-        }
-        
-        // Обработчик клика по картинке
-        clickImage.addEventListener('click', function() {
-            clickCount++;
+
+        highScoreEl.textContent = highScore;
+
+        const savedCount = localStorage.getItem('clickCount');
+        if (savedCount) {
+            clickCount = parseInt(savedCount);
             updateCounter();
+        }
+
+        clickImage.src = images[0];
+    }
+
+    function showPopup() {
+        // Создаем элемент картинки
+        const popupImg = document.createElement('img');
+        popupImg.src = popupImageUrl;
+        popupImg.className = 'popup-image';
+        
+        // Добавляем в overlay
+        popupOverlay.innerHTML = '';
+        popupOverlay.appendChild(popupImg);
+        
+        // Запускаем анимацию появления
+        requestAnimationFrame(() => {
+            popupImg.classList.add('show');
             
-            // Анимация клика
-            this.style.transform = 'scale(0.95)';
+            // Через 400ms начинаем исчезать
             setTimeout(() => {
-                this.style.transform = 'scale(1)';
-            }, 100);
-            
-            // Тактильная отдача (если поддерживается)
-            if (tg.HapticFeedback) {
-                tg.HapticFeedback.impactOccurred('light');
-            }
-        });
-        
-        // Сброс
-        resetBtn.addEventListener('click', function() {
-            if (confirm('Точно сбросить счет?')) {
-                clickCount = 0;
-                currentImageIndex = 0; // Сбрасываем к первой картинке
-                clickImage.src = images[0];
-                updateCounter();
+                popupImg.classList.remove('show');
+                popupImg.classList.add('hide');
                 
-                if (tg.HapticFeedback) {
-                    tg.HapticFeedback.impactOccurred('medium');
-                }
+                // Удаляем через 600ms
+                setTimeout(() => {
+                    popupOverlay.innerHTML = '';
+                }, 600);
+            }, 400);
+        });
+
+        // Сильная вибрация для 100 кликов
+        if (tg.HapticFeedback) {
+            tg.HapticFeedback.impactOccurred('heavy');
+        }
+    }
+
+    function updateCounter() {
+        counterEl.textContent = clickCount;
+
+        if (clickCount > highScore) {
+            highScore = clickCount;
+            highScoreEl.textContent = highScore;
+            localStorage.setItem('highScore', highScore);
+        }
+
+        localStorage.setItem('clickCount', clickCount);
+
+        currentImageIndex = (currentImageIndex + 1) % images.length;
+        clickImage.src = images[currentImageIndex];
+
+        // Анимация на каждые 10 кликов
+        if (clickCount % 10 === 0 && clickCount > 0) {
+            counterEl.classList.add('pulse');
+
+            setTimeout(() => {
+                counterEl.classList.remove('pulse');
+            }, 300);
+        }
+
+        // Всплывающая картинка на каждые 100 кликов
+        if (clickCount % 100 === 0 && clickCount > 0) {
+            showPopup();
+        }
+    }
+
+    clickImage.addEventListener('click', function () {
+        clickCount++;
+        updateCounter();
+
+        this.style.transform = 'scale(0.95)';
+        setTimeout(() => {
+            this.style.transform = 'scale(1)';
+        }, 100);
+
+        if (tg.HapticFeedback) {
+            tg.HapticFeedback.impactOccurred('light');
+        }
+    });
+
+    resetBtn.addEventListener('click', function () {
+        if (confirm('Точно сбросить счет?')) {
+            clickCount = 0;
+            currentImageIndex = 0;
+            clickImage.src = images[0];
+            updateCounter();
+
+            if (tg.HapticFeedback) {
+                tg.HapticFeedback.impactOccurred('medium');
             }
-        });
-        
-        // Кнопка сохранения в Telegram
-        tg.MainButton.setText(`💾 Сохранить счет: ${clickCount}`);
-        tg.MainButton.show();
-        tg.MainButton.onClick(function() {
-            const data = {
-                action: 'save_score',
-                score: clickCount,
-                user_id: user?.id
-            };
-            tg.sendData(JSON.stringify(data));
-            tg.close();
-        });
-        
-        // Обновляем текст кнопки каждую секунду
-        setInterval(function() {
-            tg.MainButton.setText(`💾 Сохранить счет: ${clickCount}`);
-        }, 1000);
-        
-        // Запускаем
-        init();
-    </script>
-</body>
-</html>
+        }
+    });
+
+    tg.MainButton.setText(`💾 Сохранить: ${clickCount}`);
+    tg.MainButton.show();
+    tg.MainButton.onClick(function () {
+        const data = {
+            action: 'save_score',
+            score: clickCount,
+            user_id: user?.id
+        };
+        tg.sendData(JSON.stringify(data));
+        tg.close();
+    });
+
+    setInterval(function () {
+        tg.MainButton.setText(`💾 Сохранить: ${clickCount}`);
+    }, 1000);
+
+    init();
+</script>
