@@ -330,93 +330,6 @@ async def cmd_start(message: types.Message):
         reply_markup=web_app_keyboard
     )
 
-# Обработчик данных от Web App
-
-
-@dp.message()
-async def handle_all_messages(message: types.Message):
-    """Обработчик всех сообщений"""
-    try:
-        # Пытаемся распарсить JSON из текста сообщения
-        data = json.loads(message.text)
-        
-        if data.get('web_app_data'):
-            print(f"🟢 Данные от Web App: {data}")
-            
-            user = message.from_user
-            action = data.get('action')
-            
-            if action == 'add_clicks':
-                clicks = data.get('clicks', 1)
-                print(f"➕ Клики от {user.id}: {clicks}")
-                
-                # Сохраняем в БД
-                result = add_clicks(
-                    user_id=user.id,
-                    username=user.username,
-                    first_name=user.first_name,
-                    last_name=user.last_name,
-                    clicks=clicks
-                )
-                
-                if result:
-                    # Отправляем обновленный счет обратно
-                    await message.answer(
-                        f"✅ +{clicks} кликов!\n"
-                        f"🏆 Новый счет: {result['current_score']}",
-                        parse_mode='HTML'
-                    )
-                    
-                    # Также отправляем JSON для Web App
-                    await message.answer(
-                        json.dumps({
-                            'action': 'update_score',
-                            'score': result['current_score'],
-                            'best_score': result['best_score']
-                        }),
-                        parse_mode=None
-                    )
-            
-            elif action == 'get_score':
-                score_data = get_user_score(user.id)
-                if score_data:
-                    await message.answer(
-                        json.dumps({
-                            'action': 'current_score',
-                            'current_score': score_data['current_score'],
-                            'best_score': score_data['best_score']
-                        }),
-                        parse_mode=None
-                    )
-            
-            elif action == 'get_leaderboard':
-                leaderboard_data = get_leaderboard(user_id=user.id)
-                if leaderboard_data:
-                    await message.answer(
-                        json.dumps({
-                            'action': 'leaderboard_data',
-                            'leaderboard': leaderboard_data['leaderboard'],
-                            'user_position': leaderboard_data['user_position'],
-                            'user_data': leaderboard_data['user_data']
-                        }),
-                        parse_mode=None
-                    )
-                    
-    except json.JSONDecodeError:
-        # Это не JSON сообщение, игнорируем
-        pass
-    except Exception as e:
-        print(f"❌ Ошибка обработки сообщения: {e}")
-
-async def send_response(message: types.Message, data: dict):
-    """Отправляет ответ пользователю"""
-    try:
-        response_text = json.dumps(data, ensure_ascii=False, indent=2)
-        await message.answer(f"```json\n{response_text}\n```")
-        print(f"📤 Отправлен ответ: {data.get('action')}")
-    except Exception as e:
-        print(f"❌ Ошибка отправки ответа: {e}")
-
 
 @dp.message(Command("score"))
 async def cmd_score(message: types.Message):
@@ -512,32 +425,192 @@ async def cmd_debug(message: types.Message):
             conn.close()
 
 
-@dp.message(Command("reset"))
-async def cmd_reset(message: types.Message):
-    """Сброс счета (только для отладки)"""
-    user_id = message.from_user.id
-    print(f"🔄 /reset от {user_id}")
+@dp.message(F.web_app_data)
+async def handle_web_app_data(message: types.Message):
+    """Обработчик данных от Web App через web_app_data"""
+    print(f"🟢 WebApp Data от {message.from_user.id}")
 
     try:
-        conn = sqlite3.connect(DB_NAME)
-        cursor = conn.cursor()
+        data = json.loads(message.web_app_data.data)
+        user = message.from_user
+        action = data.get('action')
+        query_id = data.get('query_id')
 
-        cursor.execute('''
-            UPDATE user_scores 
-            SET current_score = 0,
-                total_clicks = 0,
-                updated_at = CURRENT_TIMESTAMP
-            WHERE user_id = ?
-        ''', (user_id,))
+        print(f"📊 Действие: {action}, Query ID: {query_id}")
 
-        conn.commit()
-        conn.close()
+        if action == 'add_clicks':
+            clicks = data.get('clicks', 1)
 
-        await message.answer("✅ Счет сброшен")
-        print(f"✅ Счет сброшен для {user_id}")
+            result = add_clicks(
+                user_id=user.id,
+                username=user.username,
+                first_name=user.first_name,
+                last_name=user.last_name,
+                clicks=clicks
+            )
+
+            if result:
+                # Создаем ответ для Web App
+                response_data = {
+                    'action': 'update_score',
+                    'score': result['current_score'],
+                    'best_score': result['best_score'],
+                    'query_id': query_id,
+                    'success': True
+                }
+
+                # Отправляем ответ через answerWebAppQuery
+                await bot.answer_web_app_query(
+                    web_app_query_id=query_id,
+                    result=types.InlineQueryResultArticle(
+                        id="1",
+                        title=" ",
+                        input_message_content=types.InputTextMessageContent(
+                            message_text=" ",
+                            parse_mode=None
+                        )
+                    )
+                )
+
+                print(
+                    f"✅ Ответ отправлен через answerWebAppQuery: {result['current_score']}")
+
+        elif action == 'get_score':
+            score_data = get_user_score(user.id)
+
+            if score_data:
+                response_data = {
+                    'action': 'current_score',
+                    'current_score': score_data['current_score'],
+                    'best_score': score_data['best_score'],
+                    'query_id': query_id
+                }
+
+                await bot.answer_web_app_query(
+                    web_app_query_id=query_id,
+                    result=types.InlineQueryResultArticle(
+                        id="1",
+                        title=" ",
+                        input_message_content=types.InputTextMessageContent(
+                            message_text=json.dumps(response_data),
+                            parse_mode=None
+                        )
+                    )
+                )
 
     except Exception as e:
-        await message.answer(f"❌ Ошибка сброса: {str(e)}")
+        print(f"❌ Ошибка обработки web_app_data: {e}")
+
+# Обработчик обычных сообщений (не кнопок)
+
+
+@dp.message(F.text)
+async def handle_text_messages(message: types.Message):
+    """Обработчик текстовых сообщений"""
+    text = message.text
+
+    # Игнорируем нажатие на кнопку Web App
+    if text == "🎮 Открыть кликер":
+        print(f"🟢 Нажата кнопка Web App от {message.from_user.id}")
+        return
+
+    print(f"📨 Текстовое сообщение от {message.from_user.id}: {text}")
+
+    # Пытаемся распарсить как JSON (данные от Web App)
+    try:
+        data = json.loads(text)
+
+        if isinstance(data, dict) and data.get('web_app_data'):
+            user = message.from_user
+            action = data.get('action')
+
+            print(f"🟢 JSON от Web App: action={action}")
+
+            if action == 'add_clicks':
+                clicks = data.get('clicks', 1)
+                print(f"➕ Клики от {user.id}: {clicks}")
+
+                # Сохраняем в БД
+                result = add_clicks(
+                    user_id=user.id,
+                    username=user.username,
+                    first_name=user.first_name,
+                    last_name=user.last_name,
+                    clicks=clicks
+                )
+
+                if result:
+                    # Отправляем ответ в формате JSON для Web App
+                    response = {
+                        'action': 'update_score',
+                        'score': result['current_score'],
+                        'best_score': result['best_score'],
+                        'total_clicks': result['total_clicks'],
+                        'clicks_added': clicks
+                    }
+
+                    await message.answer(
+                        json.dumps(response, ensure_ascii=False),
+                        parse_mode=None
+                    )
+                    print(f"✅ Ответ отправлен: {response}")
+
+            elif action == 'get_score':
+                score_data = get_user_score(user.id)
+                if score_data:
+                    response = {
+                        'action': 'current_score',
+                        'current_score': score_data['current_score'],
+                        'best_score': score_data['best_score'],
+                        'total_clicks': score_data['total_clicks']
+                    }
+
+                    await message.answer(
+                        json.dumps(response, ensure_ascii=False),
+                        parse_mode=None
+                    )
+                    print(f"📊 Отправлен счет: {score_data['current_score']}")
+
+            elif action == 'get_leaderboard':
+                leaderboard_data = get_leaderboard(limit=10, user_id=user.id)
+                if leaderboard_data:
+                    response = {
+                        'action': 'leaderboard_data',
+                        'leaderboard': leaderboard_data['leaderboard'],
+                        'user_position': leaderboard_data['user_position'],
+                        'user_data': leaderboard_data['user_data']
+                    }
+
+                    await message.answer(
+                        json.dumps(response, ensure_ascii=False),
+                        parse_mode=None
+                    )
+                    print(
+                        f"🏆 Отправлен лидерборд: {len(leaderboard_data['leaderboard'])} игроков")
+
+        else:
+            # Это не наши данные, отвечаем стандартно
+            await message.answer(
+                "🤖 Используйте команды:\n"
+                "/start - открыть кликер\n"
+                "/score - ваш счет\n"
+                "/leaderboard - таблица лидеров\n"
+                "/debug - отладочная информация"
+            )
+
+    except json.JSONDecodeError:
+        # Это не JSON сообщение
+        if text not in ["🎮 Открыть кликер"]:
+            await message.answer(
+                "🤖 Используйте команды:\n"
+                "/start - открыть кликер\n"
+                "/score - ваш счет\n"
+                "/leaderboard - таблица лидеров"
+            )
+    except Exception as e:
+        print(f"❌ Ошибка обработки сообщения: {e}")
+        import traceback
+        traceback.print_exc()
 
 
 async def main():
@@ -546,6 +619,7 @@ async def main():
     print(f"🌐 Web App URL: {WEB_APP_URL}")
     print("📝 Отправьте /start в Telegram")
     print("🎮 Кликайте в Web App - клики будут сохраняться на сервере")
+    print("🟢 Ожидание данных от Web App...")
 
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)
