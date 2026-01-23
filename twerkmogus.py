@@ -6,8 +6,8 @@ from aiogram.types import WebAppInfo, ReplyKeyboardMarkup, KeyboardButton, Inlin
 from aiogram.client.default import DefaultBotProperties
 
 # Настройки
-API_TOKEN = 'ВАШ_ТОКЕН'
-WEB_APP_URL = 'https://ваш-сайт.com'  # URL вашего Web App
+API_TOKEN = '8002121069:AAF-3SKd3w9YOmeIwNZ0KOVQAqT_LAKxCT0'
+WEB_APP_URL = 'https://ivanpanitkov.github.io/twerkmogus/'  # URL вашего Web App
 
 bot = Bot(token=API_TOKEN, default=DefaultBotProperties(parse_mode='HTML'))
 dp = Dispatcher()
@@ -80,4 +80,3 @@ async def main():
 if __name__ == "__main__":
     import asyncio
     asyncio.run(main())
-    
