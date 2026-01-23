@@ -333,101 +333,80 @@ async def cmd_start(message: types.Message):
 # Обработчик данных от Web App
 
 
-@dp.message(F.web_app_data)
-async def handle_web_app_data(message: types.Message):
-    """Обработчик данных от Web App"""
-    print(f"🟢 Получены данные от Web App от {message.from_user.id}")
-    print(f"📦 Данные: {message.web_app_data.data}")
-
+@dp.message()
+async def handle_all_messages(message: types.Message):
+    """Обработчик всех сообщений"""
     try:
-        data = json.loads(message.web_app_data.data)
-        user = message.from_user
-
-        action = data.get('action')
-        print(f"📊 Действие: {action}")
-
-        if action == 'add_clicks':
-            # Добавляем клики
-            clicks = data.get('clicks', 1)
-            result = add_clicks(
-                user_id=user.id,
-                username=user.username,
-                first_name=user.first_name,
-                last_name=user.last_name,
-                clicks=clicks
-            )
-
-            if result:
-                print(
-                    f"✅ Добавлено {clicks} кликов, новый счет: {result['current_score']}")
-
-                # Отправляем обновленный счет
-                await send_response(
-                    message,
-                    {
-                        'action': 'update_score',
-                        'score': result['current_score'],
-                        'clicks_added': clicks
-                    }
+        # Пытаемся распарсить JSON из текста сообщения
+        data = json.loads(message.text)
+        
+        if data.get('web_app_data'):
+            print(f"🟢 Данные от Web App: {data}")
+            
+            user = message.from_user
+            action = data.get('action')
+            
+            if action == 'add_clicks':
+                clicks = data.get('clicks', 1)
+                print(f"➕ Клики от {user.id}: {clicks}")
+                
+                # Сохраняем в БД
+                result = add_clicks(
+                    user_id=user.id,
+                    username=user.username,
+                    first_name=user.first_name,
+                    last_name=user.last_name,
+                    clicks=clicks
                 )
-            else:
-                print(f"❌ Ошибка добавления кликов")
-                await send_response(
-                    message,
-                    {
-                        'action': 'error',
-                        'message': 'Ошибка сохранения'
-                    }
-                )
-
-        elif action == 'get_score':
-            # Получаем текущий счет
-            score_data = get_user_score(user.id)
-            if score_data:
-                print(f"📊 Запрос счета: {score_data['current_score']}")
-                await send_response(
-                    message,
-                    {
-                        'action': 'current_score',
-                        'current_score': score_data['current_score'],
-                        'best_score': score_data['best_score'],
-                        'total_clicks': score_data['total_clicks']
-                    }
-                )
-
-        elif action == 'get_leaderboard':
-            # Получаем лидерборд
-            leaderboard_data = get_leaderboard(limit=10, user_id=user.id)
-            if leaderboard_data:
-                print(
-                    f"🏆 Запрос лидерборда: {len(leaderboard_data['leaderboard'])} игроков")
-                await send_response(
-                    message,
-                    {
-                        'action': 'leaderboard_data',
-                        'leaderboard': leaderboard_data['leaderboard'],
-                        'user_position': leaderboard_data['user_position'],
-                        'user_data': leaderboard_data['user_data']
-                    }
-                )
-            else:
-                await send_response(
-                    message,
-                    {
-                        'action': 'error',
-                        'message': 'Лидерборд пуст'
-                    }
-                )
-
-    except json.JSONDecodeError as e:
-        print(f"❌ Ошибка JSON: {e}")
-        await message.answer(f"❌ Ошибка формата данных: {str(e)}")
+                
+                if result:
+                    # Отправляем обновленный счет обратно
+                    await message.answer(
+                        f"✅ +{clicks} кликов!\n"
+                        f"🏆 Новый счет: {result['current_score']}",
+                        parse_mode='HTML'
+                    )
+                    
+                    # Также отправляем JSON для Web App
+                    await message.answer(
+                        json.dumps({
+                            'action': 'update_score',
+                            'score': result['current_score'],
+                            'best_score': result['best_score']
+                        }),
+                        parse_mode=None
+                    )
+            
+            elif action == 'get_score':
+                score_data = get_user_score(user.id)
+                if score_data:
+                    await message.answer(
+                        json.dumps({
+                            'action': 'current_score',
+                            'current_score': score_data['current_score'],
+                            'best_score': score_data['best_score']
+                        }),
+                        parse_mode=None
+                    )
+            
+            elif action == 'get_leaderboard':
+                leaderboard_data = get_leaderboard(user_id=user.id)
+                if leaderboard_data:
+                    await message.answer(
+                        json.dumps({
+                            'action': 'leaderboard_data',
+                            'leaderboard': leaderboard_data['leaderboard'],
+                            'user_position': leaderboard_data['user_position'],
+                            'user_data': leaderboard_data['user_data']
+                        }),
+                        parse_mode=None
+                    )
+                    
+    except json.JSONDecodeError:
+        # Это не JSON сообщение, игнорируем
+        pass
     except Exception as e:
-        print(f"❌ Ошибка обработки: {e}")
-        import traceback
-        traceback.print_exc()
-        await message.answer(f"❌ Ошибка обработки: {str(e)}")
-
+        print(f"❌ Ошибка обработки сообщения: {e}")
 
 async def send_response(message: types.Message, data: dict):
     """Отправляет ответ пользователю"""

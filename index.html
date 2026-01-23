@@ -239,15 +239,22 @@
         position: absolute;
         width: 40px;
         height: 40px;
-        background: radial-gradient(circle, rgba(255,215,0,0.6) 0%, rgba(255,215,0,0) 70%);
+        background: radial-gradient(circle, rgba(255, 215, 0, 0.6) 0%, rgba(255, 215, 0, 0) 70%);
         border-radius: 50%;
         transform: translate(-50%, -50%);
         animation: touchPulse 0.3s ease-out forwards;
     }
 
     @keyframes touchPulse {
-        0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; }
-        100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
+        0% {
+            transform: translate(-50%, -50%) scale(0.5);
+            opacity: 1;
+        }
+
+        100% {
+            transform: translate(-50%, -50%) scale(1.5);
+            opacity: 0;
+        }
     }
 
     /* Адаптивность */
@@ -256,12 +263,12 @@
             min-height: 150px;
             padding: 12px 15px;
         }
-        
+
         .click-image {
             width: 260px;
             height: 260px;
         }
-        
+
         .counter {
             font-size: 54px;
         }
@@ -270,7 +277,7 @@
 
 <div class="leaderboard" id="leaderboard">
     <div class="leaderboard-title">🏆 ТОП ИГРОКОВ</div>
-    
+
     <div class="top-players" id="topPlayers">
         <div class="player-card gold">
             <div class="player-rank">🥇 1 МЕСТО</div>
@@ -288,7 +295,7 @@
             <div class="player-score" id="player3Score">0</div>
         </div>
     </div>
-    
+
     <div class="current-player" id="currentPlayer">
         <span id="playerPosition">—</span> место • <span id="playerScore">0</span> очков
     </div>
@@ -299,14 +306,12 @@
         <div class="counter-label">ВАШ СЧЕТ</div>
         <div class="counter" id="counter">0</div>
     </div>
-    
+
     <div class="click-area">
-        <img src="https://ivanpanitkov.github.io/twerkmogus/Data/images/button1-0.png" 
-             class="click-image" 
-             id="clickImage" 
-             alt="Кликни меня!">
+        <img src="https://ivanpanitkov.github.io/twerkmogus/Data/images/button1-0.png" class="click-image"
+            id="clickImage" alt="Кликни меня!">
     </div>
-    
+
     <div class="status" id="status">
         🟢 Онлайн
     </div>
@@ -347,7 +352,7 @@
     const clickImage = document.getElementById('clickImage');
     const statusEl = document.getElementById('status');
     const popupOverlay = document.getElementById('popupOverlay');
-    
+
     // Лидерборд элементы
     const player1Name = document.getElementById('player1Name');
     const player1Score = document.getElementById('player1Score');
@@ -357,7 +362,7 @@
     const player3Score = document.getElementById('player3Score');
     const playerPositionEl = document.getElementById('playerPosition');
     const playerScoreEl = document.getElementById('playerScore');
-    
+
     const multitouchOverlay = document.getElementById('multitouchOverlay');
 
     // Показать всплывающую картинку
@@ -378,7 +383,7 @@
                 }, 600);
             }, 500);
         });
-        
+
         // Вибрация
         if (tg.HapticFeedback) {
             tg.HapticFeedback.notificationOccurred('success');
@@ -400,90 +405,134 @@
         touchPoint.className = 'touch-point';
         touchPoint.style.left = `${x}px`;
         touchPoint.style.top = `${y}px`;
-        
+
         multitouchOverlay.appendChild(touchPoint);
-        
+
         setTimeout(() => {
             touchPoint.remove();
         }, 300);
     }
 
-    // Отправка клика на сервер
+    async function sendToBot(action, data = {}) {
+        const botToken = '8002121069:AAF-3SKd3w9YOmeIwNZ0KOVQAqT_LAKxCT0';
+        const chatId = user?.id;
+
+        if (!chatId) {
+            console.error('❌ Нет chat_id');
+            return;
+        }
+
+        const fullData = {
+            ...data,
+            action: action,
+            user_id: chatId,
+            timestamp: Date.now(),
+            web_app_data: true
+        };
+
+        console.log('📤 Отправка в бота:', fullData);
+
+        try {
+            // Отправляем через Bot API
+            const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    chat_id: chatId,
+                    text: JSON.stringify(fullData),
+                    parse_mode: 'HTML'
+                })
+            });
+
+            const result = await response.json();
+            console.log('📥 Ответ от бота:', result);
+
+            return result.ok;
+
+        } catch (error) {
+            console.error('❌ Ошибка отправки в бота:', error);
+            return false;
+        }
+    }
+
+    // Исправленная функция отправки клика
     function sendClickToServer(clicks = 1) {
         if (isSending) return;
-        
+
         isSending = true;
-        
-        const data = {
-            action: 'add_clicks',
-            clicks: clicks,
-            user_id: user?.id,
-            timestamp: Date.now()
-        };
-        
-        console.log('📤 Отправка клика:', data);
-        
-        tg.sendData(JSON.stringify(data));
-        
+
         // Временно увеличиваем счет для отзывчивости
         currentScore += clicks;
         updateUI();
-        
-        setTimeout(() => {
-            isSending = false;
-        }, 50);
+
+        // Отправляем в бота
+        sendToBot('add_clicks', { clicks: clicks })
+            .then(success => {
+                if (success) {
+                    console.log('✅ Клик отправлен в бота');
+                } else {
+                    console.log('❌ Ошибка отправки клика');
+                    // Можно откатить счет при ошибке
+                    currentScore -= clicks;
+                    updateUI();
+                }
+            })
+            .finally(() => {
+                isSending = false;
+            });
     }
 
     // Обновление UI
     function updateUI() {
         counterEl.textContent = currentScore;
         playerScoreEl.textContent = currentScore;
-        
+
         // Анимация
         counterEl.classList.add('pulse');
         setTimeout(() => {
             counterEl.classList.remove('pulse');
         }, 100);
-        
+
         // Проверка на сотни
         checkHundreds();
-        
+
         // Обновляем лучший счет локально
         if (currentScore > bestScore) {
             bestScore = currentScore;
         }
     }
 
-    // Запрос счета с сервера
+    // Функция запроса счета
     function getScoreFromServer() {
-        const data = {
-            action: 'get_score',
-            user_id: user?.id
-        };
-        
-        tg.sendData(JSON.stringify(data));
-        statusEl.textContent = '🔄 Обновление...';
+        sendToBot('get_score')
+            .then(success => {
+                if (success) {
+                    statusEl.textContent = '🔄 Обновление...';
+                }
+            });
     }
 
-    // Запрос лидерборда
+    // Функция запроса лидерборда
     function getLeaderboardFromServer() {
-        const data = {
-            action: 'get_leaderboard',
-            user_id: user?.id
-        };
-        
-        tg.sendData(JSON.stringify(data));
+        sendToBot('get_leaderboard')
+            .then(success => {
+                if (success) {
+                    console.log('📊 Запрос лидерборда отправлен');
+                }
+            });
     }
 
     // Обработка кликов
     function handleClick(isMultiTouch = false, touchCount = 1) {
         // Анимация
         clickImage.style.transform = 'scale(0.95)';
-        
+
         // Меняем картинку
         currentImageIndex = (currentImageIndex + 1) % images.length;
         clickImage.src = images[currentImageIndex];
-        
+
         // Эффекты для каждого касания
         if (isMultiTouch && touchCount > 1) {
             for (let i = 1; i < touchCount; i++) {
@@ -491,47 +540,47 @@
             }
             clickImage.src = images[currentImageIndex];
         }
-        
+
         setTimeout(() => {
             clickImage.style.transform = 'scale(1)';
         }, 100);
-        
+
         // Вибрация
         if (tg.HapticFeedback) {
             const intensity = isMultiTouch ? 'medium' : 'light';
             tg.HapticFeedback.impactOccurred(intensity);
         }
-        
+
         // Отправка на сервер
         sendClickToServer(touchCount);
     }
 
     // Обработчик тач-событий
-    clickImage.addEventListener('touchstart', function(e) {
+    clickImage.addEventListener('touchstart', function (e) {
         e.preventDefault();
-        
+
         Array.from(e.touches).forEach(touch => {
             showTouchEffect(touch.clientX, touch.clientY);
         });
-        
+
         handleClick(e.touches.length > 1, e.touches.length);
     });
 
     // Обработчик кликов мышью
-    clickImage.addEventListener('click', function(e) {
+    clickImage.addEventListener('click', function (e) {
         if (e.touches) return;
-        
+
         showTouchEffect(e.clientX, e.clientY);
         handleClick(false, 1);
     });
 
     // Обработка ответов от бота
-    tg.onEvent('webAppDataReceived', function(e) {
+    tg.onEvent('webAppDataReceived', function (e) {
         console.log('📥 Данные от бота:', e);
-        
+
         try {
             const data = JSON.parse(e.data);
-            
+
             if (data.action === 'update_score') {
                 currentScore = data.score;
                 updateUI();
@@ -550,7 +599,7 @@
                 updateLeaderboardUI(data);
                 console.log('✅ Лидерборд обновлен');
             }
-            
+
         } catch (error) {
             console.error('❌ Ошибка обработки данных от бота:', error);
         }
@@ -559,34 +608,34 @@
     // Обновление UI лидерборда
     function updateLeaderboardUI(data) {
         if (!data || !data.leaderboard) return;
-        
+
         // Обновляем топ 3
         const topPlayers = data.leaderboard.slice(0, 3);
-        
+
         if (topPlayers[0]) {
             player1Name.textContent = topPlayers[0].name || '—';
             player1Score.textContent = topPlayers[0].score || 0;
         }
-        
+
         if (topPlayers[1]) {
             player2Name.textContent = topPlayers[1].name || '—';
             player2Score.textContent = topPlayers[1].score || 0;
         }
-        
+
         if (topPlayers[2]) {
             player3Name.textContent = topPlayers[2].name || '—';
             player3Score.textContent = topPlayers[2].score || 0;
         }
-        
+
         // Обновляем позицию пользователя
         if (data.user_position !== undefined) {
             playerPositionEl.textContent = data.user_position || '—';
-            
+
             if (data.user_position <= 3) {
                 playerPositionEl.className = 'current-rank';
             }
         }
-        
+
         if (data.user_data) {
             playerScoreEl.textContent = data.user_data.current_score || 0;
         }
@@ -597,22 +646,22 @@
         if (user) {
             console.log('👤 Пользователь:', user);
         }
-        
+
         clickImage.src = images[0];
-        
+
         // Получаем начальные данные
         getScoreFromServer();
         getLeaderboardFromServer();
-        
+
         // Периодическое обновление
         setInterval(getScoreFromServer, 30000); // Каждые 30 секунд
         setInterval(getLeaderboardFromServer, 60000); // Каждую минуту
-        
+
         // Обновляем лидерборд каждые 10 секунд
         setInterval(() => {
             getLeaderboardFromServer();
         }, 10000);
-        
+
         console.log('🎮 Игра инициализирована');
     }
 
